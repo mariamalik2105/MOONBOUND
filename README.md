@@ -70,17 +70,17 @@ The card at the top left always shows the current step, the key to press, and pr
 
 The trip to the Moon (missions 1 to 5) is played on short, hands-on console screens. From the landing on, you walk the lunar south pole.
 
-| # | Mission | What you do | Done when |
-|---|---|---|---|
-| M | Get ready to fly | Pick an astronaut, drop 3 kits into the cargo bay with a crane (timing), then fly the rocket up through clouds and birds (dodge, grab fuel and coins, DROP BOOSTERS on cue) | Kits packed, rocket reaches space |
-| O | Reach for the Moon | Hold W to crank open the solar wings, fire the engine inside the green arc (Space) | Burn fired in the window |
-| O | Cross to the Moon | Fly through an asteroid field (dodge, grab fuel and coins); when the Sun flares, hide in the lane behind the water tanks | Run finished, crew sheltered |
-| N | Choose where to land | Fly a scanner drone (arrows or mouse) over three sites, then pick a south pole site (the equator is explained and rejected) | South pole site locked |
-| B | Land gently | Brake (Space) and slide (← →) onto the lit landing pad under 3 m/s with limited fuel, then press E to step out | Safe touchdown on the pad |
-| O | Build your base | Short intro (walk off, open the crate), then build a habitat, a solar panel in sunlight plus a battery, and connect the oxygen generator (E) | Habitat, sunny panel (60%+ sunlight) and battery, oxygen connected |
-| U | Find frozen water | Drive the rover, scan 3 different rocks, scan the shadowed crater, collect 3 ice samples | 3 distinct scans and 3 ice samples |
-| N | Connect the base | Build and set up a water recycler (order the parts), a lab (pick the iron-rich rock), a radio tower (aim the dish at Earth) | All three set up |
-| D | Make it home | Grow and harvest the greenhouse, brush dust off a panel, keep oxygen, water and power healthy for 20 s | All three |
+| Letter | Phase | Mission | What you do | Done when |
+|---|---|---|---|---|
+| **M** | **Mission Prep** | Get ready to fly | Pick an astronaut, use a crane to load 3 kits into the cargo bay, then fly through clouds and birds. Dodge obstacles, collect fuel and coins, and drop boosters on cue. | All 3 kits packed and rocket reaches space. |
+| **O** | **Orbit** | Reach for the Moon | Hold W to open the solar wings, then press Space to fire the engine inside the green arc. | Burn fired within the correct window. |
+| **O** | **Outbound** | Cross to the Moon | Navigate an asteroid field while collecting fuel and coins. When the Sun flares, shelter in the lane behind the water tanks. | Flight completed and crew sheltered. |
+| **N** | **Navigation** | Choose where to land | Fly a scanner drone using arrow keys or the mouse to survey three sites. Compare the options and select a south pole site. | South pole landing site locked in. |
+| **B** | **Bootdown** | Land gently | Use Space to brake and ← → to steer onto the lit landing pad at under 3 m/s with limited fuel. Press E to step outside. | Safe touchdown on the pad and astronaut steps out. |
+| **O** | **Outpost** | Build your base | Walk off the lander, open the crate, and build a habitat, a solar panel in at least 60% sunlight, and a battery. Press E to connect the oxygen generator. | Habitat built, sunny panel and battery installed, and oxygen connected. |
+| **U** | **Uncover** | Find frozen water | Drive the rover, scan 3 different rocks, scan the shadowed crater, and collect 3 ice samples. | 3 distinct rock scans, crater scanned, and 3 ice samples collected. |
+| **N** | **Network** | Connect the base | Build and set up a water recycler by ordering its parts, a lab by choosing the iron-rich rock, and a radio tower by aiming its dish at Earth. | Water recycler, lab, and radio tower all set up. |
+| **D** | **Development** | Make it home | Grow and harvest greenhouse crops, brush dust off a solar panel, and keep oxygen, water, and power healthy for 20 seconds. | Crops harvested, panel cleaned, and resources maintained for 20 seconds. |
 
 ### Base jobs (repeatable, earn coins)
 
@@ -171,9 +171,6 @@ Rooms hold up to 4 crew. The server checks every building placement (known build
 ---
 
 ## Known limitations
-- The star-tracker and landing screens are timing/steering tasks; they are fully playable with keys or by holding on-screen buttons.
-- Building setup tasks (recycler, lab, antenna) are short and simplified; the lab readings use low/medium/high.
 - Storm doses and shielding percentages are simplified game estimates (anchored to NASA limits), not physics simulations.
-- Shared co-op economy is client-side; the server validates placement only.
 - The colony simulation advances 0.5 sim-seconds per real second, so one lunar day lasts about 16 real minutes.
 - Mission Records "benchmark" times are game targets, not NASA records.
