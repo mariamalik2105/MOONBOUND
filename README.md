@@ -163,6 +163,11 @@ Rooms hold up to 4 crew. The server checks every building placement (known build
 
 ---
 
+### Link to Project
+- [https://moonbound-delta.vercel.app/](url)
+
+---
+
 ## 📜 Asset Credits & License
 - Procedural code-authored 2D sprites, Three.js 3D models, and Web Audio synthesizers created specifically for MOONBOUND.
 - Scientific facts and mission details derived from NASA public domain research.
