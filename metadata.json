@@ -1,0 +1,8 @@
+{
+  "name": "Remix MOONBOUND - NASA Space Apps Lunar Colony Game",
+  "description": "One Moon. Nine Phases. One Mission: Make It Home. A 2D lunar exploration, resource crafting, science adventure and colony management game.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
