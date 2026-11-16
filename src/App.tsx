@@ -44,6 +44,7 @@ import { MissionRecordsModal } from './components/MissionRecordsModal';
 import { ResearchModal } from './components/ResearchModal';
 import { StormAlertModal, StormStatusBanner, StormDebriefModal, MissionOverModal } from './components/SolarStormPanels';
 import { NasaDataModal } from './components/NasaDataModal';
+import { TouchControls, useCoarsePointer } from './components/TouchControls';
 
 import { type GameSaveData, createNewGameSave, saveGameToDb, loadGameFromDb } from './game/saveSystem';
 import { tickSimulation, solveColonyProblem, chooseStormResponse, acknowledgeStormDebrief, type PlacedBuilding } from './game/simulation';
@@ -912,10 +913,12 @@ export default function App() {
   // ---------------------------------------------------------------- render
   const playing = screen === 'playing';
   const inFlight = playing && !onSurface;
+  const touchScreen = useCoarsePointer();
+  const touchMove = useCallback((x: number, y: number) => engineRef.current?.setTouchMove(x, y), []);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-moon-bg text-moon-text">
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block z-0" data-testid="lunar-game-canvas" aria-label="Moon surface. Use W A S D to walk, or click the ground." />
+    <div className="relative w-full h-screen h-dvh overflow-hidden bg-moon-bg text-moon-text">
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block z-0 touch-none" data-testid="lunar-game-canvas" aria-label="Moon surface. Use W A S D to walk, or click the ground." />
 
       {screen === 'title' && (
         <div className="absolute inset-0 z-30">
@@ -946,6 +949,10 @@ export default function App() {
           onCoins={(key, coins) => dispatch({ type: 'bonus', dollars: coins, key: `flight:${key}`, reason: 'Flight bonus' })}
           onMenu={() => open('pause')}
         />
+      )}
+
+      {playing && onSurface && touchScreen && !blocked && (
+        <TouchControls onMove={touchMove} onUse={() => engineRef.current?.interact()} />
       )}
 
       {playing && onSurface && top !== 'liftoff' && (

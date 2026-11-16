@@ -192,6 +192,11 @@ export class MoonboundEngine {
   private inputEnabled = false;
   private reducedMotion = false;
   private keys = new Set<string>();
+  /** On-screen thumbstick (touch screens), -1..1 per axis. */
+  private touchMove = { x: 0, y: 0 };
+  /** Small screens zoom out so more of the map fits. */
+  private baseZoom = 1;
+  private lastTapTouch = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches === true;
 
   public camera = { x: LADDER.x, y: LADDER.y, zoom: 1 };
   private cameraOverride: { x: number; y: number; zoom: number } | null = null;
@@ -304,7 +309,7 @@ export class MoonboundEngine {
     window.addEventListener('resize', this.onResize);
     document.addEventListener('visibilitychange', this.onBlur);
     canvas.addEventListener('mousemove', this.onMouseMove);
-    canvas.addEventListener('mousedown', this.onMouseDown);
+    canvas.addEventListener('pointerdown', this.onMouseDown);
     canvas.addEventListener('mouseenter', this.onMouseEnter);
     canvas.addEventListener('mouseleave', this.onMouseLeave);
     canvas.addEventListener('contextmenu', this.onContextMenu);
@@ -347,7 +352,7 @@ export class MoonboundEngine {
     window.removeEventListener('resize', this.onResize);
     document.removeEventListener('visibilitychange', this.onBlur);
     this.canvas.removeEventListener('mousemove', this.onMouseMove);
-    this.canvas.removeEventListener('mousedown', this.onMouseDown);
+    this.canvas.removeEventListener('pointerdown', this.onMouseDown);
     this.canvas.removeEventListener('mouseenter', this.onMouseEnter);
     this.canvas.removeEventListener('mouseleave', this.onMouseLeave);
     this.canvas.removeEventListener('contextmenu', this.onContextMenu);
@@ -682,6 +687,7 @@ export class MoonboundEngine {
 
   private releaseInput() {
     this.keys.clear();
+    this.touchMove = { x: 0, y: 0 };
     this.path = [];
     this.dest = null;
     this.pendingInteract = null;
@@ -827,6 +833,8 @@ export class MoonboundEngine {
     this.screenW = rect.width || window.innerWidth;
     this.screenH = rect.height || window.innerHeight;
     this.dpr = Math.min(2, window.devicePixelRatio || 1);
+    const short = Math.min(this.screenW, this.screenH);
+    this.baseZoom = short < 480 ? 0.72 : short < 700 ? 0.85 : 1;
     this.canvas.width = Math.round(this.screenW * this.dpr);
     this.canvas.height = Math.round(this.screenH * this.dpr);
     const scale = Math.min(2, this.dpr);
@@ -905,9 +913,23 @@ export class MoonboundEngine {
     return true;
   }
 
-  private onMouseDown = (e: MouseEvent) => {
+  private onMouseDown = (e: PointerEvent) => {
     if (e.button !== 0 || !this.inputEnabled || this.paused) return;
     const w = this.toWorld(e.clientX, e.clientY);
+    this.lastTapTouch = e.pointerType === 'touch';
+    if (this.buildGhostRecipeId && this.lastTapTouch) {
+      // touch has no hover: the first tap moves the preview, tapping the preview places it
+      const r = this.ghostRect();
+      const onGhost = r && w.x >= r.x - 6 && w.x <= r.x + r.w + 6 && w.y >= r.y - 6 && w.y <= r.y + r.h + 6;
+      if (!onGhost) {
+        this.mouseWorld = w;
+        this.ghostByKeys = false;
+        this.lastMouseMove = performance.now();
+        return;
+      }
+      this.tryPlace();
+      return;
+    }
     this.mouseWorld = w;
     this.ghostByKeys = false;
     if (this.buildGhostRecipeId) {
@@ -1533,14 +1555,19 @@ export class MoonboundEngine {
   // Update
   // -------------------------------------------------------------------------
 
+  /** Thumbstick direction from the touch controls (-1..1 per axis). */
+  public setTouchMove(x: number, y: number) {
+    this.touchMove = { x, y };
+  }
+
   private moveInput() {
-    let x = 0;
-    let y = 0;
+    let x = this.touchMove.x;
+    let y = this.touchMove.y;
     if (this.keys.has('w') || this.keys.has('arrowup')) y -= 1;
     if (this.keys.has('s') || this.keys.has('arrowdown')) y += 1;
     if (this.keys.has('a') || this.keys.has('arrowleft')) x -= 1;
     if (this.keys.has('d') || this.keys.has('arrowright')) x += 1;
-    return { x, y };
+    return { x: Math.max(-1, Math.min(1, x)), y: Math.max(-1, Math.min(1, y)) };
   }
 
   private facingVector() {
@@ -1838,7 +1865,7 @@ export class MoonboundEngine {
       : { x: this.player.vx, y: this.player.vy };
     const tx = o ? o.x : this.player.x + Math.max(-70, Math.min(70, v.x * lead));
     const ty = o ? o.y : this.player.y - 20 + Math.max(-70, Math.min(70, v.y * lead));
-    const tz = o ? o.zoom : 1;
+    const tz = o ? o.zoom : this.baseZoom;
     const k = 1 - Math.exp(-dt * (o ? 2 : 7));
     this.camera.x += (tx - this.camera.x) * k;
     this.camera.y += (ty - this.camera.y) * k;
@@ -2429,7 +2456,7 @@ export class MoonboundEngine {
     ctx.strokeRect(g.x, g.y, g.w, g.h);
     ctx.setLineDash([]);
     const sun = sunFactorAt(g.x + g.w / 2, g.y + g.h / 2);
-    let msg = reason ? `✕ ${reason}` : `✓ ${this.ghostByKeys ? 'Press E to place' : 'Click to place'}`;
+    let msg = reason ? `✕ ${reason}` : `✓ ${this.lastTapTouch ? 'Tap it again to place' : this.ghostByKeys ? 'Press E to place' : 'Click to place'}`;
     if (this.buildGhostRecipeId === 'solar_panel') msg += ` · Sunlight ${Math.round(sun * 100)}%`;
     tag(ctx, g.x + g.w / 2, g.y - 8, msg, reason ? PAL.warn : PAL.ok);
     tag(ctx, g.x + g.w / 2, g.y + g.h + 24, 'Esc to cancel', '#cfcac0');

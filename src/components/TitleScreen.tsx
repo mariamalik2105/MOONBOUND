@@ -36,7 +36,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({
   onOpenNasaData,
 }) => {
   return (
-    <div className="mb-title relative w-full h-full flex flex-col justify-between p-8 sm:p-12 overflow-hidden select-none text-slate-100">
+    <div className="mb-title relative w-full h-full flex flex-col justify-between p-5 sm:p-12 overflow-x-hidden overflow-y-auto overscroll-contain select-none text-slate-100">
       {/* Decorative backdrop: starfield, planets, Earth, Moon and lunar surface */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         <div className="mb-title-rings" />

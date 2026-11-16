@@ -214,11 +214,11 @@ export interface ToastItem {
 }
 
 export const ToastStack: React.FC<{ toasts: ToastItem[] }> = ({ toasts }) => (
-  <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-16 z-40 flex flex-col items-center gap-2 w-[min(520px,calc(100vw-2rem))]" aria-live="polite">
+  <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-16 max-sm:top-[36%] z-40 flex flex-col items-center gap-2 max-sm:gap-1.5 w-[min(520px,calc(100vw-2rem))]" aria-live="polite">
     {toasts.map((t) => (
       <div
         key={t.id}
-        className={`mb-toast rounded-xl px-4 py-2 text-[15px] font-bold shadow-lg border bg-moon-panel/95 mb-rise text-center ${
+        className={`mb-toast rounded-xl px-4 py-2 text-[15px] max-sm:px-3 max-sm:py-1.5 max-sm:text-sm font-bold shadow-lg border bg-moon-panel/95 mb-rise text-center ${
           t.tone === 'warn' ? 'border-moon-warn text-red-100' : t.tone === 'good' ? 'border-moon-ok' : 'border-moon-line'
         }`}
       >

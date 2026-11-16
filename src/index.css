@@ -90,6 +90,24 @@
     font-family: var(--font-sans);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    /* It's a game: tapping or holding a button must not select its text,
+       pop up the copy menu or flash a grey box on phones. */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  input,
+  textarea,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  button,
+  [role='button'],
+  a {
+    /* no double-tap zoom delay on buttons */
+    touch-action: manipulation;
   }
   h1,
   h2,

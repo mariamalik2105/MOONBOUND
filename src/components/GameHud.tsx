@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Hammer, Backpack, Radar, Menu, Lightbulb, Check, ListChecks, Volume2, VolumeX, AlertTriangle, Car, Sun, Moon, FlaskConical } from 'lucide-react';
+import { Hammer, Backpack, Radar, Menu, Lightbulb, Check, ListChecks, Volume2, VolumeX, AlertTriangle, Car, Sun, Moon, FlaskConical, ChevronDown, ChevronUp } from 'lucide-react';
 import type { MissionGuide } from '../game/progression';
 
 export interface HudGauge {
@@ -48,6 +48,20 @@ interface GameHudProps {
   jobs?: { id: string; icon: string; label: string; coins: number; onClick: () => void }[];
 }
 
+/** Phones (portrait or landscape): smaller HUD, collapsible mission card. */
+const COMPACT_QUERY = '(max-width: 639px), (max-height: 500px)';
+function useCompact() {
+  const [compact, setCompact] = React.useState(() => typeof window !== 'undefined' && window.matchMedia?.(COMPACT_QUERY).matches === true);
+  React.useEffect(() => {
+    const mq = window.matchMedia?.(COMPACT_QUERY);
+    if (!mq) return;
+    const on = () => setCompact(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return compact;
+}
+
 const ICONS = {
   build: Hammer,
   scan: Radar,
@@ -78,6 +92,9 @@ export const GameHud: React.FC<GameHudProps> = ({
   jobs = [],
 }) => {
   const done = guide.steps.filter((s) => s.done).length;
+  const compact = useCompact();
+  const [expanded, setExpanded] = React.useState(false);
+  const showDetails = !compact || expanded;
   // little "+N ✦" pop whenever coins go up
   const [pop, setPop] = React.useState<{ n: number; id: number } | null>(null);
   const prevDollars = React.useRef(spaceDollars);
@@ -93,12 +110,27 @@ export const GameHud: React.FC<GameHudProps> = ({
   }, [spaceDollars]);
   return (
     <div className="absolute inset-0 pointer-events-none select-none z-20 text-moon-text">
+      {/* On narrow phones the mission card and gauges stack at the top; wider screens use the two top corners */}
+      <div className="absolute inset-x-2 top-[max(0.5rem,env(safe-area-inset-top))] flex flex-col gap-1.5 sm:contents">
       {/* Mission card */}
       <section
         aria-label="Current mission"
-        className="mb-panel pointer-events-auto absolute left-4 top-4 w-[min(360px,calc(100vw-2rem))] rounded-2xl bg-moon-panel/90 border border-moon-line shadow-xl"
+        className={`mb-panel pointer-events-auto relative w-full sm:absolute sm:left-4 sm:top-4 rounded-2xl bg-moon-panel/90 border border-moon-line shadow-xl ${
+          compact ? 'sm:w-[min(320px,calc(50vw-1.5rem))]' : 'sm:w-[min(360px,calc(100vw-2rem))]'
+        }`}
       >
-        <div className="flex items-center gap-1 px-4 pt-3" aria-label="Campaign progress">
+        {compact && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Show less' : 'Show hint, steps and jobs'}
+            className="absolute right-1.5 top-1.5 z-10 rounded-lg p-1.5 bg-slate-800 border border-moon-line"
+          >
+            {expanded ? <ChevronUp className="w-4 h-4" aria-hidden /> : <ChevronDown className="w-4 h-4" aria-hidden />}
+          </button>
+        )}
+        {showDetails && <div className="flex items-center gap-1 px-4 pt-3" aria-label="Campaign progress">
           {phaseLetters.map((p, i) => (
             <span
               key={i}
@@ -110,18 +142,18 @@ export const GameHud: React.FC<GameHudProps> = ({
               {p.letter}
             </span>
           ))}
-        </div>
-        <div className="px-4 pt-2 pb-3">
+        </div>}
+        <div className={compact ? 'px-3 pt-2 pb-2 pr-11' : 'px-4 pt-2 pb-3'}>
           <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-lg font-semibold leading-tight">{guide.title}</h2>
+            <h2 className={`${compact ? 'text-base' : 'text-lg'} font-semibold leading-tight`}>{guide.title}</h2>
             {guide.steps.length > 0 && (
               <span className="text-xs text-moon-muted shrink-0">
                 {done}/{guide.steps.length} done
               </span>
             )}
           </div>
-          <div className="mt-2 rounded-2xl bg-moon-panel-2 border-2 border-[#8ceaff]/45 px-3 py-2.5" role="status" aria-live="polite">
-            <div className="text-[15px] font-bold leading-snug">{guide.current.text}</div>
+          <div className={`${compact ? 'mt-1.5 px-2.5 py-1.5' : 'mt-2 px-3 py-2.5'} rounded-2xl bg-moon-panel-2 border-2 border-[#8ceaff]/45`} role="status" aria-live="polite">
+            <div className={`${compact ? 'text-sm' : 'text-[15px]'} font-bold leading-snug`}>{guide.current.text}</div>
             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm">
               {guide.current.control && (
                 <span className="mb-kbd rounded-md bg-moon-text text-[#1a1a20] px-2 py-0.5 text-xs font-bold">{guide.current.control}</span>
@@ -129,13 +161,13 @@ export const GameHud: React.FC<GameHudProps> = ({
               {guide.current.progress && <span className="text-moon-target font-bold">{guide.current.progress}</span>}
             </div>
           </div>
-          {hint && (
+          {hint && showDetails && (
             <p className="mt-2 text-sm text-slate-200 flex gap-2 mb-rise">
               <Lightbulb className="w-4 h-4 mt-0.5 text-moon-target shrink-0" aria-hidden />
               <span>{hint}</span>
             </p>
           )}
-          <div className="mt-2.5 flex flex-wrap gap-2">
+          {showDetails && <div className="mt-2.5 flex flex-wrap gap-2">
             <button
               onClick={onHint}
               className="mb-hud-btn flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 border border-moon-line"
@@ -153,9 +185,9 @@ export const GameHud: React.FC<GameHudProps> = ({
                 Skip intro
               </button>
             )}
-          </div>
+          </div>}
         </div>
-        {jobs.length > 0 && (
+        {jobs.length > 0 && showDetails && (
           <div className="border-t border-moon-line px-4 py-2.5" aria-label="Base jobs">
             <div className="text-xs text-moon-muted mb-1.5">Base jobs · earn coins</div>
             <div className="flex flex-wrap gap-1.5">
@@ -174,16 +206,21 @@ export const GameHud: React.FC<GameHudProps> = ({
       </section>
 
       {/* Gauges */}
-      <section aria-label="Base status" className="pointer-events-auto absolute right-4 top-4 flex flex-col items-end gap-2 max-w-[min(420px,calc(100vw-2rem))]">
-        <div className="flex flex-wrap justify-end gap-2">
-          <span className="mb-chip flex items-center gap-1.5 rounded-xl bg-moon-panel/90 border border-moon-line px-3 py-1.5 text-sm" title={dayNight === 'day' ? 'Lunar day' : 'Lunar night'}>
+      <section
+        aria-label="Base status"
+        className={`pointer-events-auto flex flex-col items-start sm:items-end gap-1.5 sm:gap-2 sm:absolute sm:right-4 sm:top-4 ${
+          compact ? 'sm:max-w-[calc(50vw-1.5rem)] text-xs' : 'sm:max-w-[min(420px,calc(100vw-2rem))]'
+        }`}
+      >
+        <div className="flex flex-wrap justify-start sm:justify-end gap-1.5 sm:gap-2">
+          <span className={`mb-chip flex items-center gap-1.5 rounded-xl bg-moon-panel/90 border border-moon-line ${compact ? 'px-2 py-1' : 'px-3 py-1.5 text-sm'}`} title={dayNight === 'day' ? 'Lunar day' : 'Lunar night'}>
             {dayNight === 'day' ? <Sun className="w-4 h-4 text-moon-target" aria-hidden /> : <Moon className="w-4 h-4 text-moon-accent" aria-hidden />}
             <span className="sr-only">{dayNight === 'day' ? 'Day' : 'Night'}</span>
           </span>
           {gauges.map((g) => (
             <div
               key={g.id}
-              className={`mb-chip rounded-xl bg-moon-panel/90 border px-3 py-1.5 min-w-[92px] ${
+              className={`mb-chip rounded-xl bg-moon-panel/90 border ${compact ? 'px-2 py-1 min-w-[70px]' : 'px-3 py-1.5 min-w-[92px]'} ${
                 g.state === 'critical' ? 'border-moon-warn' : g.state === 'low' ? 'border-moon-target' : 'border-moon-line'
               }`}
             >
@@ -191,7 +228,7 @@ export const GameHud: React.FC<GameHudProps> = ({
                 <span>{g.label}</span>
                 {g.state && g.state !== 'ok' && <AlertTriangle className="w-3.5 h-3.5 text-moon-warn" aria-label="Low" />}
               </div>
-              <div className="text-[15px] font-bold leading-tight">{g.value}</div>
+              <div className={`${compact ? 'text-[13px]' : 'text-[15px]'} font-bold leading-tight`}>{g.value}</div>
               {g.fill !== undefined && (
                 <div className="mb-track mt-1 h-1.5 rounded-full bg-slate-800 overflow-hidden">
                   <div
@@ -204,7 +241,7 @@ export const GameHud: React.FC<GameHudProps> = ({
           ))}
         </div>
         {materials.length > 0 && (
-          <div className="mb-chip flex flex-wrap justify-end gap-1.5 rounded-xl bg-moon-panel/90 border border-moon-line px-3 py-1.5 text-sm">
+          <div className={`mb-chip flex flex-wrap justify-start sm:justify-end gap-1.5 rounded-xl bg-moon-panel/90 border border-moon-line ${compact ? 'px-2 py-1' : 'px-3 py-1.5 text-sm'}`}>
             {materials.map((m) => (
               <span key={m.id} className={m.needed && m.value < m.needed ? 'text-moon-target font-bold' : 'text-slate-200'}>
                 {m.label} {m.value}
@@ -221,7 +258,7 @@ export const GameHud: React.FC<GameHudProps> = ({
             </span>
           </div>
         )}
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-wrap justify-start sm:justify-end gap-1.5 sm:gap-2">
           {stormLabel && (
             <span className="mb-chip rounded-xl bg-red-950 border border-moon-warn px-3 py-1.5 text-sm font-bold text-red-200">☀ {stormLabel}</span>
           )}
@@ -240,29 +277,37 @@ export const GameHud: React.FC<GameHudProps> = ({
           )}
         </div>
       </section>
+      </div>
 
       {/* Action bar */}
-      <nav aria-label="Actions" className="mb-panel pointer-events-auto absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-2xl bg-moon-panel/90 border border-moon-line p-2 shadow-xl">
+      <nav
+        aria-label="Actions"
+        className={`mb-panel pointer-events-auto absolute left-1/2 -translate-x-1/2 flex items-center rounded-2xl bg-moon-panel/90 border border-moon-line shadow-xl max-w-[calc(100vw-1rem)] overflow-x-auto ${
+          compact ? 'bottom-[max(0.5rem,env(safe-area-inset-bottom))] gap-1 p-1' : 'bottom-4 gap-2 p-2'
+        }`}
+      >
         {actions.map((a) => {
           const Icon = ICONS[a.icon];
           return (
             <button
               key={a.id}
               onClick={a.onClick}
-              className={`mb-hud-btn flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold min-h-11 border ${
+              className={`mb-hud-btn shrink-0 rounded-xl font-bold min-h-11 border ${
+                compact ? 'flex flex-col items-center justify-center gap-0.5 px-2 py-1 min-w-12 text-[11px]' : 'flex items-center gap-2 px-3.5 py-2.5 text-sm'
+              } ${
                 a.active ? 'bg-moon-accent text-[#18161f] border-moon-accent' : 'bg-slate-800 hover:bg-slate-700 border-moon-line'
               }`}
             >
               <Icon className="w-4 h-4" aria-hidden />
-              <span>{a.label}</span>
-              <kbd className={`mb-kbd rounded px-1.5 text-xs font-bold ${a.active ? 'bg-[#18161f]/20' : 'bg-slate-950 text-slate-300'}`}>{a.keyHint}</kbd>
+              <span>{compact && a.icon === 'backpack' ? 'Bag' : a.label}</span>
+              {!compact && <kbd className={`mb-kbd rounded px-1.5 text-xs font-bold ${a.active ? 'bg-[#18161f]/20' : 'bg-slate-950 text-slate-300'}`}>{a.keyHint}</kbd>}
             </button>
           );
         })}
         <button
           onClick={onToggleMute}
           aria-label={isMuted ? 'Turn sound on' : 'Mute sound'}
-          className="mb-hud-btn rounded-xl p-2.5 bg-slate-800 hover:bg-slate-700 border border-moon-line min-h-11"
+          className="mb-hud-btn shrink-0 rounded-xl p-2.5 bg-slate-800 hover:bg-slate-700 border border-moon-line min-h-11"
         >
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </button>
